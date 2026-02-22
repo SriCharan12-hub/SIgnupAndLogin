@@ -2,44 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Lock, Loader2, CheckCircle2, Rainbow } from "lucide-react";
-import { resetPassword } from "@/services/authService";
+import { Mail, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { requestPasswordReset } from "@/services/authService";
 
-export default function ResetPasswordForm({ token }) {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [showPassword, setShowPassword] = useState(false);
+export default function ForgotPasswordForm() {
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    if (!token) {
-      setError("Reset token is missing. Please request a new reset link.");
-      return;
-    }
-
     setLoading(true);
+
     try {
-      await resetPassword(token, formData.newPassword);
+      await requestPasswordReset(email);
       setSuccess(true);
-      setTimeout(() => router.push("/auth/login"), 3000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -52,92 +31,60 @@ export default function ResetPasswordForm({ token }) {
       {/* Left panel */}
       <div className="w-full md:w-1/2 flex items-center justify-center md:justify-end p-8 md:py-12 md:pl-12 md:pr-4 bg-white">
         <div className="w-full max-w-md space-y-6">
+          {/* Back link */}
+          <Link
+            href="/auth/login"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to login
+          </Link>
+
           <div>
             <h1 className="text-3xl font-serif font-bold text-gray-900 mb-1">
-              Reset password
+              Forgot password?
             </h1>
             <p className="text-gray-500 text-sm">
-              Choose a new strong password for your account.
+              Enter your email and we&apos;ll send you a reset link.
             </p>
           </div>
 
-          {/* No token guard */}
-          {!token ? (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-600">
-              <p className="font-medium mb-1">Invalid reset link</p>
-              <p className="text-red-400">
-                This link is invalid or has already been used.{" "}
-                <Link
-                  href="/auth/forgot-password"
-                  className="underline font-medium text-red-500 hover:text-red-700"
-                >
-                  Request a new one
-                </Link>
-                .
-              </p>
-            </div>
-          ) : success ? (
+          {/* Success state */}
+          {success ? (
             <div className="bg-green-50 border border-green-200 rounded-xl p-6 flex flex-col items-center text-center space-y-3">
               <CheckCircle2 className="w-10 h-10 text-green-500" />
               <h2 className="font-semibold text-gray-800 text-lg">
-                Password updated!
+                Check your inbox
               </h2>
               <p className="text-sm text-gray-500">
-                Your password has been reset successfully. Redirecting you to
-                login in a moment…
+                If <span className="font-medium text-gray-700">{email}</span> is
+                registered, you&apos;ll receive a password reset link shortly.
+                The link expires in <strong>1 hour</strong>.
               </p>
               <Link
                 href="/auth/login"
                 className="mt-2 text-sm font-medium text-gray-500 hover:text-gray-800 underline underline-offset-2 transition-colors"
               >
-                Go to login now
+                Return to login
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* New password */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-500 block">
-                  New Password
+                  Email address
                 </label>
                 <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
-                    type={showPassword ? "text" : "password"}
-                    name="newPassword"
-                    value={formData.newPassword}
-                    onChange={handleChange}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-3 pr-12 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-colors text-gray-900 placeholder-gray-400"
-                    placeholder="Enter new password"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-colors text-gray-900 placeholder-gray-400"
+                    placeholder="Enter your email"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer z-10"
-                  >
-                    <Rainbow
-                      className={`h-5 w-5 transition-colors ${
-                        showPassword ? "text-blue-500" : "text-gray-400"
-                      }`}
-                    />
-                  </button>
                 </div>
-              </div>
-
-              {/* Confirm password */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-500 block">
-                  Confirm Password
-                </label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-colors text-gray-900 placeholder-gray-400"
-                  placeholder="Confirm new password"
-                />
               </div>
 
               {error && (
@@ -154,7 +101,7 @@ export default function ResetPasswordForm({ token }) {
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  "Update Password"
+                  "Send Reset Link"
                 )}
               </button>
 
@@ -177,7 +124,7 @@ export default function ResetPasswordForm({ token }) {
         <div className="absolute inset-0 flex items-center justify-center md:justify-start md:pl-4">
           <img
             src="https://res.cloudinary.com/sricharan/image/upload/v1771330656/15282905-04dd-47ab-aae9-dba36f911bde_rbpwna.jpg"
-            alt="Reset Password Illustration"
+            alt="Forgot Password Illustration"
             className="mb-8 object-contain w-[70%] h-[80%] opacity-90 mix-blend-multiply"
             onError={(e) => {
               e.target.onerror = null;

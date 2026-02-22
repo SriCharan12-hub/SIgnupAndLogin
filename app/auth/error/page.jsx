@@ -8,16 +8,31 @@ function ErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
+  let title = "Login Failed";
   let errorMessage = "An unknown error occurred.";
+
   if (error === "auth_failed") {
     errorMessage = "Authentication failed. Google did not return a valid code.";
   } else if (error === "database_error") {
     errorMessage = "A database error occurred during sign in.";
+  } else if (error === "missing_token") {
+    title = "Verification Failed";
+    errorMessage = "The verification link is invalid (missing token).";
+  } else if (error === "invalid_token") {
+    title = "Verification Failed";
+    errorMessage = "The verification link is invalid or has already been used.";
+  } else if (error === "token_expired") {
+    title = "Verification Failed";
+    errorMessage =
+      "The verification link has expired. Please request a new one.";
+  } else if (error === "server_error") {
+    title = "Error";
+    errorMessage = "A server error occurred. Please try again later.";
   }
 
   return (
     <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
-      <h1 className="text-2xl font-bold text-red-600 mb-4">Login Failed</h1>
+      <h1 className="text-2xl font-bold text-red-600 mb-4">{title}</h1>
       <p className="text-gray-600 mb-6">{errorMessage}</p>
       <Link
         href="/auth/login"

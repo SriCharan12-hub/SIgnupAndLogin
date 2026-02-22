@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { signIn } from "next-auth/react";
 import { Rainbow, Leaf, Chrome, Facebook, Instagram } from "lucide-react";
 import { signupUser } from "@/services/authService";
 import SwipeButton from "@/components/ui/SwipeButton";
@@ -19,14 +20,12 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
   // Swipe Button Logic
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
   const handleChange = (e) => {
     const value =
       e.target.type === "checkbox" ? e.target.checked : e.target.value;
@@ -163,13 +162,6 @@ export default function SignupPage() {
                 Join us today and get started
               </p>
             </div>
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm text-center">
-                {error}
-              </div>
-            )}
-
             <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
               <div className="space-y-1">
                 <div className="relative">
@@ -276,24 +268,9 @@ export default function SignupPage() {
               <div className="flex space-x-3">
                 <button
                   type="button"
-                  onClick={async (e) => {
-                    // Google Logic
-                    e.preventDefault();
-                    try {
-                      const { supabase } =
-                        await import("@/lib/supabase/client");
-                      await supabase.auth.signInWithOAuth({
-                        provider: "google",
-                        options: {
-                          redirectTo: `${window.location.origin}/api/auth/callback/google`,
-                        },
-                      });
-                    } catch (err) {
-                      toast.error("Google Login failed");
-                    }
-                  }}
+                  onClick={() => signIn("google", { callbackUrl: "/" })}
                   className="p-2 border border-gray-200 rounded-full hover:bg-gray-50 transition"
-                  title="Google"
+                  title="Sign in with Google"
                 >
                   <Chrome className="w-5 h-5 text-gray-900" />
                 </button>

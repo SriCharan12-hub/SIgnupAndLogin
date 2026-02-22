@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { validatePassword } from "@/lib/validations";
-import pool from "@/lib/db";
+import pool from "@/lib/DbConnection/db";
 import crypto from "crypto";
 import { transporter, mailOptions } from "@/lib/nodemailer";
 import bcrypt from "bcrypt";
@@ -43,14 +43,12 @@ export async function POST(request) {
 
     if (existingUserResult.rows.length > 0) {
       const existingUser = existingUserResult.rows[0];
-      
       if (!existingUser.EmailConfirmation) {
         return NextResponse.json(
           { error: "User has registered but email confirmation is not yet done. Please check your email." },
           { status: 409 }
         );
       }
-      
       return NextResponse.json(
         { error: "User already registered. Please login." },
         { status: 409 }
