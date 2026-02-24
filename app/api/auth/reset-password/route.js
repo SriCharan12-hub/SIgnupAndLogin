@@ -40,6 +40,20 @@ export async function POST(request) {
 
     const user = result.rows[0];
 
+    // Check if new password is same as current password
+    if (user.Password) {
+      const isSamePassword = await bcrypt.compare(newPassword, user.Password);
+      if (isSamePassword) {
+        return NextResponse.json(
+          {
+            error:
+              "New password cannot be the same as your old password. Please choose a different one.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 

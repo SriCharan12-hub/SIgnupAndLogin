@@ -32,7 +32,6 @@ export const signupUser = async (email, password) => {
     },
     body: JSON.stringify({ email, password }),
   });
-
   const data = await response.json();
   console.log("Signup API Response:", { status: response.status, data });
 

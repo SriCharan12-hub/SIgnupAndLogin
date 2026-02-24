@@ -55,6 +55,17 @@ export async function POST(request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Check lockout status
+    if (user.LockoutUntil && new Date(user.LockoutUntil) > new Date()) {
+      return NextResponse.json(
+        {
+          error:
+            "Account locked due to multiple failed attempts. Try again later.",
+        },
+        { status: 403 },
+      );
+    }
+
     // Check OTP expiry
     if (!user.MfaOtpExpires || new Date(user.MfaOtpExpires) < new Date()) {
       return NextResponse.json(
@@ -65,16 +76,47 @@ export async function POST(request) {
 
     // Compare OTP against stored hash
     const otpMatch = await bcrypt.compare(String(otp), user.MfaOtp);
+
     if (!otpMatch) {
+      const failedAttempts = (user.FailedLoginAttempts || 0) + 1;
+
+      // Lock after 5 failed attempts (consistent with password login)
+      if (failedAttempts >= 5) {
+        await pool.query(
+          `UPDATE "Users" 
+           SET "FailedLoginAttempts" = $1, 
+               "LockoutUntil" = NOW() + interval '15 minutes' 
+           WHERE "id" = $2`,
+          [failedAttempts, userId],
+        );
+        return NextResponse.json(
+          {
+            error:
+              "Account locked due to multiple failed attempts. Try again in 15 minutes.",
+          },
+          { status: 403 },
+        );
+      }
+
+      await pool.query(
+        `UPDATE "Users" SET "FailedLoginAttempts" = $1 WHERE "id" = $2`,
+        [failedAttempts, userId],
+      );
+
       return NextResponse.json(
         { error: "Invalid code. Please try again." },
         { status: 401 },
       );
     }
 
-    // OTP correct — clear it from DB immediately (single-use)
+    // OTP correct — clear it and reset failed attempts
     await pool.query(
-      'UPDATE "Users" SET "MfaOtp" = NULL, "MfaOtpExpires" = NULL WHERE "id" = $1',
+      `UPDATE "Users" 
+       SET "MfaOtp" = NULL, 
+           "MfaOtpExpires" = NULL, 
+           "FailedLoginAttempts" = 0, 
+           "LockoutUntil" = NULL 
+       WHERE "id" = $1`,
       [userId],
     );
 
