@@ -255,18 +255,21 @@ export default function LoginForm() {
 
                     <button
                       type="button"
+                      onClick={() => signIn("facebook", { callbackUrl: "/" })}
                       className="p-2 border border-blue-100 rounded-full hover:bg-blue-50 transition text-blue-600"
                     >
                       <Facebook className="w-5 h-5" />
                     </button>
                     <button
                       type="button"
+                      onClick={() => signIn("instagram", { callbackUrl: "/" })}
                       className="p-2 border border-pink-100 rounded-full hover:bg-pink-50 transition text-pink-600"
                     >
                       <Instagram className="w-5 h-5" />
                     </button>
                     <button
                       type="button"
+                      onClick={() => signIn("pinterest", { callbackUrl: "/" })}
                       className="p-2 border border-red-100 rounded-full hover:bg-red-50 transition text-red-600 font-bold text-xs flex items-center justify-center w-[38px] h-[38px]"
                     >
                       P
